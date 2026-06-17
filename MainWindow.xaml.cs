@@ -16,13 +16,22 @@ namespace SecureExamBrowser
         // Keyboard hook untuk memblokir tombol sistem (Phase 3).
         private KeyboardHook? _keyboardHook;
 
+        // Phase 4: penanda bahwa keluar sudah disetujui (password admin benar).
+        // Selama false, setiap upaya menutup jendela akan dibatalkan.
+        private bool _allowClose;
+
+        // Mencegah dialog password terbuka berkali-kali (mis. Ctrl+Shift+Q ditekan berulang).
+        private bool _exitDialogOpen;
+
         public MainWindow()
         {
             InitializeComponent();
 
             // Konfigurasi kiosk dari Phase 1: rebut kembali posisi teratas saat fokus hilang.
+            // Kecuali saat dialog password sedang terbuka -> jangan curi fokusnya.
             Deactivated += (_, _) =>
             {
+                if (_exitDialogOpen) return;
                 Topmost = true;
                 Activate();
             };
@@ -35,16 +44,45 @@ namespace SecureExamBrowser
                 Focus();
 
                 // Pasang keyboard hook (memblokir Alt+Tab, Win, Alt+F4, Ctrl+Esc).
-                // [TEMPORARY] Untuk sekarang, hotkey Ctrl+Shift+Q -> Close().
-                // Di Phase 4, aksi keluar diganti dengan prompt password admin.
-                _keyboardHook = new KeyboardHook(onExitRequested: Close);
+                // Ctrl+Shift+Q kini memicu prompt password admin (bukan langsung tutup).
+                _keyboardHook = new KeyboardHook(onExitRequested: RequestAdminExit);
                 _keyboardHook.Install();
 
                 await InitializeWebViewAsync();
             };
 
-            // Saat jendela ditutup, WAJIB lepas hook agar tidak terjadi memory leak / lag OS.
+            // Phase 4: cegat upaya menutup. Selama belum disetujui admin, batalkan.
+            Closing += (_, e) =>
+            {
+                if (!_allowClose)
+                    e.Cancel = true;
+            };
+
+            // Saat jendela benar-benar ditutup, WAJIB lepas hook agar tidak terjadi memory leak / lag OS.
             Closed += (_, _) => _keyboardHook?.Dispose();
+        }
+
+        /// <summary>
+        /// Menampilkan dialog password admin. Jika password benar, izinkan aplikasi keluar.
+        /// </summary>
+        private void RequestAdminExit()
+        {
+            if (_exitDialogOpen) return; // sudah ada dialog yang terbuka
+            _exitDialogOpen = true;
+            try
+            {
+                var dialog = new PasswordDialog { Owner = this };
+                bool? result = dialog.ShowDialog();
+                if (result == true)
+                {
+                    _allowClose = true; // password sudah diverifikasi benar di dalam dialog
+                    Close();
+                }
+            }
+            finally
+            {
+                _exitDialogOpen = false;
+            }
         }
 
         /// <summary>

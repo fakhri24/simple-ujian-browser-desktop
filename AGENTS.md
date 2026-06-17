@@ -50,7 +50,7 @@ The application will act as a secure "wrapper" around a web-based examination pl
 
 - Intercept the window closing event.
 - If a user attempts to close the app, prompt them with a custom native dialog asking for an **Admin Password**.
-- Default password for development: `sekolah123`.
+- Default admin password: `Admin123!`.
 - The application can only exit if the correct password is provided.
 
 ## 4. Coding & Architecture Guidelines

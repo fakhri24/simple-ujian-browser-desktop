@@ -80,8 +80,9 @@ namespace SecureExamBrowser
                     bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
 
                     // ===================================================================
-                    // [TEMPORARY] Hotkey developer untuk KELUAR: Ctrl + Shift + Q
-                    // HAPUS blok ini di Phase 4 setelah mekanisme password admin dibuat.
+                    // Hotkey KELUAR admin: Ctrl + Shift + Q
+                    // Memicu prompt password admin (lihat MainWindow.RequestAdminExit).
+                    // Aplikasi hanya benar-benar keluar bila password 'Admin123!' benar.
                     // ===================================================================
                     if (ctrl && shift && vk == VK_Q)
                     {

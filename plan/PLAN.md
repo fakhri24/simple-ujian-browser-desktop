@@ -49,7 +49,7 @@ This document outlines the step-by-step development phases for the minimalist lo
 - **Goal:** Create an exit gateway protected by an administrator password.
 - **Requirements:**
   - Intercept the window `Closing` event to prevent standard termination.
-  - Launch a custom modal input box requesting an Admin Password (Default: `sekolah123`).
+  - Launch a custom modal input box requesting an Admin Password (Default: `Admin123!`).
   - Allow the app to close _only_ if the password matches; otherwise, cancel the exit event.
 
 ### 🟦 Phase 5: Finalisasi & Build (The Deployment)
