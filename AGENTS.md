@@ -1,0 +1,69 @@
+# AI Agent Instructions: Secure Exam Browser for Windows (C# WPF)
+
+## 1. Project Overview & Goal
+
+You are an expert Senior C# .NET Developer. Your task is to assist in building a lightweight, highly secure, minimalist lockdown browser (Safe Browser Exam clone) for Windows.
+
+The application will act as a secure "wrapper" around a web-based examination platform. It must prevent students from navigating away, opening other apps, or using unauthorized keyboard shortcuts during the exam.
+
+## 2. Technical Stack & Environment
+
+- **Language:** C#
+- **Framework:** .NET 8.0 or .NET 9.0 (WPF - Windows Presentation Foundation)
+- **Web Component:** Microsoft Edge WebView2 (Chromium-based)
+- **Target OS:** Windows 10 and Windows 11
+- **Deployment Goal:** Framework-Dependent Single-File Executable (~3MB - 5MB)
+
+### ⚠️ IMPORTANT: Development Workflow Notes for the Agent
+
+- **Host OS:** The developer is writing code on **macOS using VS Code (with C# Dev Kit)**.
+- **Testing OS:** The application cannot be run or tested on macOS. Testing and final compilation will be done on a **separate Windows machine via CLI**.
+- **Agent Guidance:** Do NOT instruct the developer to use Visual Studio GUI tools (like the XAML Designer, Properties Window, or Visual Studio Publish Wizard). All code instructions must be tailored for raw code editing in VS Code, and all compilation instructions must use the `dotnet` CLI.
+
+## 3. Core Functional Requirements
+
+### A. Window & UI Configuration
+
+- The application must launch immediately in **True Fullscreen** and **Kiosk Mode**.
+- Set `WindowStyle="None"`, `ResizeMode="NoResize"`, and `WindowState="Maximized"`.
+- Implement `Topmost="True"` to ensure it stays above all other system windows (including basic notifications).
+- Hide the Windows Taskbar and prevent the application from losing focus.
+
+### B. WebView2 Integration
+
+- Embed a full-screen `WebView2` control inside the main window.
+- The default initial URL must be configurable (Placeholder: `https://web-ujian-kamu.com`).
+- Disable the default WebView2 context menu (Right-Click).
+- Disable DevTools access (`Ctrl+Shift+I` or `F12`).
+- Disable built-in browser status bars, acceleration keys, and zoom features.
+
+### C. Security & Lockdown (Low-Level Hooks)
+
+- Implement Windows API Hooks (`SetWindowsHookEx`) to intercept and block the following system-level shortcuts:
+  - `Alt + Tab` (App Switching)
+  - `Windows Key` / `LWin` / `RWin` (Start Menu)
+  - `Alt + F4` (Force Close)
+  - `Ctrl + Esc` (Start Menu)
+- _Note on Task Manager:_ Acknowledge that `Ctrl+Shift+Esc` and `Ctrl+Alt+Del` cannot be blocked easily at the user level, but ensure the application's `Topmost="True"` behavior forces Task Manager to open _behind_ our exam window.
+
+### D. Admin Exit Mechanism
+
+- Intercept the window closing event.
+- If a user attempts to close the app, prompt them with a custom native dialog asking for an **Admin Password**.
+- Default password for development: `sekolah123`.
+- The application can only exit if the correct password is provided.
+
+## 4. Coding & Architecture Guidelines
+
+- **Clean Code:** Write clean, asynchronous, and well-commented C# code.
+- **Safety First:** Avoid memory leaks when registering low-level keyboard hooks; ensure proper unhooking when the application closes (`UnhookWindowsHookEx`).
+- **WebView2 Readiness:** Ensure `EnsureCoreWebView2Async()` is fully awaited before attempting to manipulate browser settings or navigating to the URL.
+- **Inter-Process Communication (IPC):** Prepare the code structure for Web-to-Native communication using `window.chrome.webview.postMessage` in case the web frontend needs to signal a security breach.
+
+## 5. Your Next Steps as the AI Agent
+
+When asked to write code, please provide:
+
+1. The exact XAML layout for `MainWindow.xaml`.
+2. The complete C# code-behind for `MainWindow.xaml.cs` containing the window initialization, WebView2 setup, and low-level keyboard hook logic.
+3. Detailed explanations on how to safely compile the project using the `dotnet publish` CLI command for Windows.

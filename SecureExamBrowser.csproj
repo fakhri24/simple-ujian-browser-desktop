@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Output type "WinExe" = aplikasi Windows berbasis GUI (tanpa jendela console hitam). -->
+    <OutputType>WinExe</OutputType>
+
+    <!-- Target .NET 8.0 khusus Windows. Akhiran "-windows" wajib agar WPF aktif. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+
+    <!-- Mengaktifkan dukungan WPF (Window, XAML, dll). -->
+    <UseWPF>true</UseWPF>
+
+    <!-- Nullable reference types aktif: bantu cegah bug NullReferenceException. -->
+    <Nullable>enable</Nullable>
+
+    <!-- Mewajibkan deklarasi using yang rapi & fitur bahasa modern. -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Nama file .exe hasil build. -->
+    <AssemblyName>SecureExamBrowser</AssemblyName>
+  </PropertyGroup>
+
+</Project>
