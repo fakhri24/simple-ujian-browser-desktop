@@ -20,4 +20,23 @@
     <AssemblyName>SecureExamBrowser</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!--
+        Package WebView2 (mesin Chromium dari Microsoft Edge).
+        Inilah komponen yang merender halaman ujian di dalam aplikasi kita.
+    -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+        Pastikan config.txt selalu disalin ke folder output (di samping .exe)
+        setiap kali ada perubahan. Operator bisa mengedit file ini untuk
+        mengganti URL ujian TANPA perlu build ulang aplikasi.
+    -->
+    <None Update="config.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

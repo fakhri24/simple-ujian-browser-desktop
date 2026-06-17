@@ -1,0 +1,10 @@
+# ====================================================================
+# KONFIGURASI SECURE EXAM BROWSER
+# --------------------------------------------------------------------
+# Baris yang diawali tanda '#' adalah komentar (diabaikan aplikasi).
+# Baris pertama yang BUKAN komentar dan tidak kosong akan dipakai
+# sebagai URL ujian. Ganti URL di bawah lalu simpan -- TIDAK perlu
+# build ulang aplikasi. Cukup edit file ini di samping .exe.
+# ====================================================================
+
+https://simple-ujian.web.app/
