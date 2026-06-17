@@ -1,5 +1,5 @@
 # ====================================================================
-# KONFIGURASI SECURE EXAM BROWSER
+# KONFIGURASI SIMPLE UJIAN BROWSER
 # --------------------------------------------------------------------
 # Baris yang diawali tanda '#' adalah komentar (diabaikan aplikasi).
 # Baris pertama yang BUKAN komentar dan tidak kosong akan dipakai

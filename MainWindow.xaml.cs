@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 
-namespace SecureExamBrowser
+namespace SimpleUjianBrowser
 {
     /// <summary>
     /// Code-behind untuk MainWindow.

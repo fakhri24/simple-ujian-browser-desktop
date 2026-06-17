@@ -1,4 +1,4 @@
-# AI Agent Instructions: Secure Exam Browser for Windows (C# WPF)
+# AI Agent Instructions: Simple Ujian Browser for Windows (C# WPF)
 
 ## 1. Project Overview & Goal
 

@@ -1,6 +1,6 @@
 # Panduan Build & Deployment (Phase 5)
 
-Dokumen ini menjelaskan cara meng-compile Secure Exam Browser menjadi **satu
+Dokumen ini menjelaskan cara meng-compile Simple Ujian Browser menjadi **satu
 file `.exe` self-contained** yang bisa langsung dijalankan di laptop siswa
 **tanpa perlu menginstal .NET** terlebih dahulu.
 
@@ -46,18 +46,18 @@ bin\Release\net8.0-windows\win-x64\publish\
 
 Isi folder itu:
 
-- `SecureExamBrowser.exe`  <- aplikasi utama (single-file, ~70-150 MB)
+- `SimpleUjianBrowser.exe`  <- aplikasi utama (single-file, ~70-150 MB)
 - `config.txt`             <- URL ujian yang bisa diedit
 
 ---
 
 ## 3. Cara Distribusi ke Laptop Siswa
 
-1. Salin **`SecureExamBrowser.exe`** ke laptop siswa.
+1. Salin **`SimpleUjianBrowser.exe`** ke laptop siswa.
 2. (Opsional) Salin juga **`config.txt`** di folder yang sama bila ingin
    mengganti URL ujian tanpa build ulang. Jika `config.txt` tidak ada,
    aplikasi otomatis memakai URL bawaan (`https://simple-ujian.web.app/`).
-3. Dobel-klik `SecureExamBrowser.exe` untuk menjalankan ujian.
+3. Dobel-klik `SimpleUjianBrowser.exe` untuk menjalankan ujian.
 
 > Syarat di laptop siswa: hanya **WebView2 Runtime** (umumnya sudah ada di
 > Windows 10/11 modern). Jika belum ada, aplikasi menampilkan pesan jelas

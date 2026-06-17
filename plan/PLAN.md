@@ -1,4 +1,4 @@
-# Development Plan: Secure Exam Browser for Windows (C# WPF)
+# Development Plan: Simple Ujian Browser for Windows (C# WPF)
 
 This document outlines the step-by-step development phases for the minimalist lockdown exam browser. The AI Agent must guide the developer through one phase at a time, ensuring complete understanding before moving to the next.
 

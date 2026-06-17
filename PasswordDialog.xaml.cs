@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace SecureExamBrowser
+namespace SimpleUjianBrowser
 {
     /// <summary>
     /// Dialog modal untuk verifikasi password admin sebelum keluar aplikasi.

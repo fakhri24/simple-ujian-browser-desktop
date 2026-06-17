@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-namespace SecureExamBrowser
+namespace SimpleUjianBrowser
 {
     /// <summary>
     /// Memasang Low-Level Keyboard Hook (WH_KEYBOARD_LL) lewat Win32 API.

@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace SecureExamBrowser
+namespace SimpleUjianBrowser
 {
     /// <summary>
     /// Code-behind untuk App.xaml.
