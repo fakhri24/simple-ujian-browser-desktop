@@ -18,6 +18,7 @@ siswa tidak perlu menginstal .NET).
 - **URL ujian dapat dikonfigurasi** lewat `config.txt` tanpa perlu build ulang.
 - **Keluar butuh password admin** melalui dialog modal (default: `Admin123!`) — lewat tombol `Keluar` di pojok kanan-atas atau pintasan `Ctrl+Shift+Q`.
 - **Exit otomatis via URL** — jika website ujian redirect ke `exit_url` (opsional, di `config.txt`), aplikasi keluar otomatis tanpa password (mis. setelah submit).
+- **Toolbar kanan-atas** — info baterai, jam berjalan, dan tombol `Muat ulang` halaman, di samping tombol `Keluar`.
 
 ---
 

@@ -14,6 +14,51 @@
         kontrol <wv2:WebView2> dari package Microsoft.Web.WebView2.
     -->
 
+    <Window.Resources>
+        <!--
+            Gaya bersama untuk tombol toolbar (Muat ulang & Keluar).
+            Warna latar diisi per-tombol lewat properti Background; hover/pressed
+            cukup menurunkan opacity sehingga satu template dipakai ulang.
+        -->
+        <Style x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#1E1E2E" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.70" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Gaya bersama untuk teks info (baterai & jam) di toolbar. -->
+        <Style x:Key="StatusInfo" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CDD6F4" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,16,0" />
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <!--
             WebView2 = area browser tempat halaman ujian dirender.
@@ -39,45 +84,50 @@
                    VerticalAlignment="Center" />
 
         <!--
-            Tombol "Keluar" yang terlihat di pojok kanan-atas.
-            - Diletakkan PALING AKHIR di dalam Grid supaya selalu tampil di
-              atas WebView (anak terakhir dirender paling depan).
-            - Click-nya memanggil RequestAdminExit() yang SAMA dengan jalur
-              Ctrl+Shift+Q -> tetap wajib memasukkan password admin.
-            - Gaya tombol didefinisikan inline lewat ControlTemplate agar
-              sudut membulat & punya efek hover, tanpa file resource terpisah.
+            Toolbar di pojok kanan-atas: info baterai, jam, tombol Muat ulang,
+            dan tombol Keluar.
+            - Dibungkus Border ber-latar gelap semi-transparan (#CC1E1E2E) agar
+              teks tetap terbaca di atas halaman web yang mungkin berlatar putih.
+            - Diletakkan PALING AKHIR di dalam Grid supaya selalu tampil di atas
+              WebView (anak terakhir dirender paling depan).
         -->
-        <Button x:Name="ExitButton"
-                Content="Keluar"
-                Click="ExitButton_Click"
-                HorizontalAlignment="Right"
+        <Border HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Margin="0,16,16,0"
-                Padding="18,8"
-                FontSize="14"
-                FontWeight="SemiBold"
-                Foreground="#1E1E2E"
-                Cursor="Hand"
-                ToolTip="Keluar dari ujian (perlu password pengawas)">
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bg"
-                            Background="#F38BA8"
-                            CornerRadius="8"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="#EB6F90" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="#E64C75" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Button.Template>
-        </Button>
+                Background="#CC1E1E2E"
+                CornerRadius="10"
+                Padding="12,8">
+            <StackPanel Orientation="Horizontal">
+                <!-- Kondisi baterai (diisi dari code-behind via timer). -->
+                <TextBlock x:Name="BatteryText"
+                           Style="{StaticResource StatusInfo}"
+                           Text="--" />
+
+                <!-- Jam berjalan (diisi dari code-behind via timer). -->
+                <TextBlock x:Name="ClockText"
+                           Style="{StaticResource StatusInfo}"
+                           Text="--:--:--" />
+
+                <!-- Muat ulang halaman ujian (memanggil CoreWebView2.Reload). -->
+                <Button x:Name="ReloadButton"
+                        Content="Muat ulang"
+                        Click="ReloadButton_Click"
+                        Style="{StaticResource ToolbarButton}"
+                        Background="#89B4FA"
+                        Margin="0,0,10,0"
+                        ToolTip="Muat ulang halaman ujian" />
+
+                <!--
+                    Tombol Keluar: memanggil RequestAdminExit() yang SAMA dengan
+                    jalur Ctrl+Shift+Q -> tetap wajib memasukkan password admin.
+                -->
+                <Button x:Name="ExitButton"
+                        Content="Keluar"
+                        Click="ExitButton_Click"
+                        Style="{StaticResource ToolbarButton}"
+                        Background="#F38BA8"
+                        ToolTip="Keluar dari ujian (perlu password pengawas)" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

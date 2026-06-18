@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 
 namespace SimpleUjianBrowser
@@ -28,6 +29,9 @@ namespace SimpleUjianBrowser
         // null/kosong = fitur dimatikan.
         private string? _exitUrl;
 
+        // Timer toolbar: memperbarui jam & info baterai setiap detik.
+        private DispatcherTimer? _statusTimer;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -53,6 +57,12 @@ namespace SimpleUjianBrowser
                 _keyboardHook = new KeyboardHook(onExitRequested: RequestAdminExit);
                 _keyboardHook.Install();
 
+                // Mulai timer toolbar: perbarui jam & baterai tiap detik.
+                _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+                _statusTimer.Tick += (_, _) => UpdateStatusBar();
+                _statusTimer.Start();
+                UpdateStatusBar(); // tampilkan langsung tanpa menunggu 1 detik
+
                 await InitializeWebViewAsync();
             };
 
@@ -64,8 +74,28 @@ namespace SimpleUjianBrowser
             };
 
             // Saat jendela benar-benar ditutup, WAJIB lepas hook agar tidak terjadi memory leak / lag OS.
-            Closed += (_, _) => _keyboardHook?.Dispose();
+            Closed += (_, _) =>
+            {
+                _statusTimer?.Stop();
+                _keyboardHook?.Dispose();
+            };
         }
+
+        /// <summary>
+        /// Memperbarui teks jam & baterai di toolbar. Dipanggil dari _statusTimer.
+        /// </summary>
+        private void UpdateStatusBar()
+        {
+            ClockText.Text = DateTime.Now.ToString("HH:mm:ss");
+            BatteryText.Text = BatteryStatus.GetDisplayText();
+        }
+
+        /// <summary>
+        /// Handler tombol "Muat ulang": memuat ulang halaman ujian saat ini.
+        /// Aman jika CoreWebView2 belum siap (operator menekan terlalu dini).
+        /// </summary>
+        private void ReloadButton_Click(object sender, RoutedEventArgs e)
+            => WebView.CoreWebView2?.Reload();
 
         /// <summary>
         /// Handler tombol "Keluar" di pojok kanan-atas. Memakai jalur keluar yang
