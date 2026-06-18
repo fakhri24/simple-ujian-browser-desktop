@@ -17,6 +17,7 @@ siswa tidak perlu menginstal .NET).
 - **Blokir pintasan sistem** via low-level keyboard hook: `Alt+Tab`, `Win`, `Alt+F4`, `Ctrl+Esc`.
 - **URL ujian dapat dikonfigurasi** lewat `config.txt` tanpa perlu build ulang.
 - **Keluar butuh password admin** melalui dialog modal (default: `Admin123!`) — lewat tombol `Keluar` di pojok kanan-atas atau pintasan `Ctrl+Shift+Q`.
+- **Exit otomatis via URL** — jika website ujian redirect ke `exit_url` (opsional, di `config.txt`), aplikasi keluar otomatis tanpa password (mis. setelah submit).
 
 ---
 
@@ -27,6 +28,9 @@ Edit `config.txt` (diletakkan di samping `.exe`):
 - Baris diawali `#` adalah komentar.
 - Baris pertama yang bukan komentar & tidak kosong dipakai sebagai URL ujian.
 - Jika `config.txt` tidak ada, aplikasi memakai URL bawaan: `https://simple-ujian.web.app/`.
+- Baris opsional `exit_url=<url>` — jika website ujian menavigasi ke URL ini, aplikasi
+  keluar otomatis **tanpa password** (cocok untuk redirect setelah submit). Pencocokan
+  berdasarkan awalan, jadi query string tambahan tetap terdeteksi.
 
 ---
 
@@ -52,6 +56,7 @@ Panduan build & deployment lengkap ada di [BUILD.md](BUILD.md).
 
 - Klik tombol **`Keluar`** di pojok kanan-atas → masukkan password admin (`Admin123!`).
 - Alternatif: tekan **`Ctrl + Shift + Q`** → masukkan password admin yang sama.
+- **Otomatis (tanpa password):** website ujian redirect ke `exit_url` (lihat Konfigurasi).
 - Jaring pengaman darurat: **`Ctrl + Alt + Del` → Sign out**.
 
 ---

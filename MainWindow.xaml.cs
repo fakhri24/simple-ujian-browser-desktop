@@ -23,6 +23,11 @@ namespace SimpleUjianBrowser
         // Mencegah dialog password terbuka berkali-kali (mis. Ctrl+Shift+Q ditekan berulang).
         private bool _exitDialogOpen;
 
+        // URL "exit" opsional dari config.txt. Jika website ujian menavigasi ke URL ini
+        // (mis. setelah siswa submit), aplikasi keluar otomatis TANPA minta password.
+        // null/kosong = fitur dimatikan.
+        private string? _exitUrl;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -163,30 +168,76 @@ namespace SimpleUjianBrowser
             };
 
             // --- 5. Tentukan URL & navigasi ------------------------------------------
-            string url = ReadExamUrl();
-            WebView.CoreWebView2.Navigate(url);
+            ExamConfig config = ReadConfig();
+            _exitUrl = config.ExitUrl;
+
+            // Jika exit_url diset, pantau setiap awal navigasi untuk keluar otomatis.
+            if (!string.IsNullOrEmpty(_exitUrl))
+                WebView.CoreWebView2.NavigationStarting += OnNavigationStarting;
+
+            WebView.CoreWebView2.Navigate(config.ExamUrl);
         }
 
         /// <summary>
-        /// Membaca URL ujian dari config.txt yang berada di samping file .exe.
-        /// Mengambil baris pertama yang bukan komentar (#) dan tidak kosong.
-        /// Jika file tidak ada / kosong, kembalikan DefaultUrl.
+        /// Dipanggil setiap kali halaman akan bernavigasi. Jika tujuannya cocok dengan
+        /// URL exit dari config (mis. website ujian mengarahkan ke sana setelah submit),
+        /// batalkan navigasi tersebut lalu tutup aplikasi TANPA meminta password admin.
+        /// Pencocokan memakai awalan (prefix) agar query string tambahan tetap terdeteksi.
         /// </summary>
-        private static string ReadExamUrl()
+        private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
+            if (string.IsNullOrEmpty(_exitUrl))
+                return;
+
+            if (e.Uri.StartsWith(_exitUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                e.Cancel = true;     // jangan render halaman sentinel
+                _allowClose = true;  // izinkan Closing tanpa dialog password
+                // Tutup setelah event handler selesai, bukan di tengah navigasi.
+                Dispatcher.BeginInvoke(new Action(Close));
+            }
+        }
+
+        /// <summary>
+        /// Hasil pembacaan config.txt: URL ujian (wajib) + URL exit opsional.
+        /// </summary>
+        private sealed record ExamConfig(string ExamUrl, string? ExitUrl);
+
+        /// <summary>
+        /// Membaca config.txt yang berada di samping file .exe.
+        /// Aturan per baris (baris '#' atau kosong diabaikan):
+        ///   - "exit_url=&lt;url&gt;"  -> URL exit opsional (keluar otomatis tanpa password).
+        ///   - baris valid pertama lainnya -> URL ujian.
+        /// Jika file tidak ada / tidak ada URL ujian, pakai DefaultUrl.
+        /// </summary>
+        private static ExamConfig ReadConfig()
+        {
+            string? examUrl = null;
+            string? exitUrl = null;
+
             try
             {
                 string configPath = Path.Combine(AppContext.BaseDirectory, "config.txt");
-                if (!File.Exists(configPath))
-                    return DefaultUrl;
-
-                foreach (string raw in File.ReadAllLines(configPath))
+                if (File.Exists(configPath))
                 {
-                    string line = raw.Trim();
-                    if (line.Length == 0 || line.StartsWith("#"))
-                        continue; // lewati baris kosong & komentar
+                    foreach (string raw in File.ReadAllLines(configPath))
+                    {
+                        string line = raw.Trim();
+                        if (line.Length == 0 || line.StartsWith("#"))
+                            continue; // lewati baris kosong & komentar
 
-                    return line; // baris valid pertama = URL ujian
+                        const string exitPrefix = "exit_url=";
+                        if (line.StartsWith(exitPrefix, StringComparison.OrdinalIgnoreCase))
+                        {
+                            string value = line.Substring(exitPrefix.Length).Trim();
+                            if (value.Length > 0)
+                                exitUrl = value;
+                            continue;
+                        }
+
+                        // Baris valid pertama yang bukan setting = URL ujian.
+                        examUrl ??= line;
+                    }
                 }
             }
             catch
@@ -194,7 +245,7 @@ namespace SimpleUjianBrowser
                 // Abaikan error baca file; pakai URL cadangan agar aplikasi tetap jalan.
             }
 
-            return DefaultUrl;
+            return new ExamConfig(examUrl ?? DefaultUrl, exitUrl);
         }
 
         /// <summary>

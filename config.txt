@@ -5,6 +5,16 @@
 # Baris pertama yang BUKAN komentar dan tidak kosong akan dipakai
 # sebagai URL ujian. Ganti URL di bawah lalu simpan -- TIDAK perlu
 # build ulang aplikasi. Cukup edit file ini di samping .exe.
+#
+# OPSIONAL -- URL EXIT OTOMATIS:
+# Tambahkan baris "exit_url=<url>" (tanpa tanda <>). Jika website ujian
+# menavigasi/redirect ke URL itu (mis. setelah siswa submit), aplikasi
+# akan KELUAR OTOMATIS tanpa minta password. Pencocokan berdasarkan awalan,
+# jadi query string tambahan (mis. ?status=done) tetap terdeteksi.
+# Contoh:
+#   exit_url=https://simple-ujian.web.app/selesai
+# Biarkan baris ini dikomentari jika fitur tidak dipakai.
 # ====================================================================
 
 https://simple-ujian.web.app/
+# exit_url=https://simple-ujian.web.app/selesai
