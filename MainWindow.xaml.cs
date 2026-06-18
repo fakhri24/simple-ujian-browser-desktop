@@ -63,6 +63,12 @@ namespace SimpleUjianBrowser
         }
 
         /// <summary>
+        /// Handler tombol "Keluar" di pojok kanan-atas. Memakai jalur keluar yang
+        /// SAMA dengan Ctrl+Shift+Q, jadi password admin tetap wajib dimasukkan.
+        /// </summary>
+        private void ExitButton_Click(object sender, RoutedEventArgs e) => RequestAdminExit();
+
+        /// <summary>
         /// Menampilkan dialog password admin. Jika password benar, izinkan aplikasi keluar.
         /// </summary>
         private void RequestAdminExit()

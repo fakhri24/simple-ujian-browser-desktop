@@ -16,7 +16,7 @@ siswa tidak perlu menginstal .NET).
 - **WebView2 terkunci** — klik kanan, DevTools (`F12` / `Ctrl+Shift+I`), dan zoom dinonaktifkan.
 - **Blokir pintasan sistem** via low-level keyboard hook: `Alt+Tab`, `Win`, `Alt+F4`, `Ctrl+Esc`.
 - **URL ujian dapat dikonfigurasi** lewat `config.txt` tanpa perlu build ulang.
-- **Keluar butuh password admin** melalui dialog modal (default: `Admin123!`).
+- **Keluar butuh password admin** melalui dialog modal (default: `Admin123!`) — lewat tombol `Keluar` di pojok kanan-atas atau pintasan `Ctrl+Shift+Q`.
 
 ---
 
@@ -50,7 +50,8 @@ Panduan build & deployment lengkap ada di [BUILD.md](BUILD.md).
 
 ## Cara Keluar
 
-- Tekan **`Ctrl + Shift + Q`** → masukkan password admin (`Admin123!`).
+- Klik tombol **`Keluar`** di pojok kanan-atas → masukkan password admin (`Admin123!`).
+- Alternatif: tekan **`Ctrl + Shift + Q`** → masukkan password admin yang sama.
 - Jaring pengaman darurat: **`Ctrl + Alt + Del` → Sign out**.
 
 ---

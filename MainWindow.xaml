@@ -37,5 +37,47 @@
                    MaxWidth="700"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center" />
+
+        <!--
+            Tombol "Keluar" yang terlihat di pojok kanan-atas.
+            - Diletakkan PALING AKHIR di dalam Grid supaya selalu tampil di
+              atas WebView (anak terakhir dirender paling depan).
+            - Click-nya memanggil RequestAdminExit() yang SAMA dengan jalur
+              Ctrl+Shift+Q -> tetap wajib memasukkan password admin.
+            - Gaya tombol didefinisikan inline lewat ControlTemplate agar
+              sudut membulat & punya efek hover, tanpa file resource terpisah.
+        -->
+        <Button x:Name="ExitButton"
+                Content="Keluar"
+                Click="ExitButton_Click"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,16,16,0"
+                Padding="18,8"
+                FontSize="14"
+                FontWeight="SemiBold"
+                Foreground="#1E1E2E"
+                Cursor="Hand"
+                ToolTip="Keluar dari ujian (perlu password pengawas)">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="#F38BA8"
+                            CornerRadius="8"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#EB6F90" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#E64C75" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
     </Grid>
 </Window>
