@@ -20,7 +20,25 @@
     <AssemblyName>SimpleUjianBrowser</AssemblyName>
 
     <!-- Deklarasikan target platform Windows 64-bit untuk publish (Phase 5). -->
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+    <!--
+        Konfigurasi distribusi: cukup jalankan `dotnet publish -c Release`.
+        Hasilnya SATU file .exe (+ config.txt di sampingnya) di:
+        bin/Release/net8.0-windows/win-x64/publish/
+    -->
+
+    <!-- Bundel runtime .NET ke dalam .exe: peserta TIDAK perlu install .NET (cocok BYOD). -->
+    <SelfContained>true</SelfContained>
+
+    <!-- Bungkus semua DLL kode jadi satu file .exe. -->
+    <PublishSingleFile>true</PublishSingleFile>
+
+    <!--
+        WAJIB untuk WebView2: ikut bungkus native DLL (WebView2Loader.dll) ke dalam .exe.
+        Tanpa ini, WebView2Loader.dll tetap muncul terpisah di samping .exe.
+    -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
