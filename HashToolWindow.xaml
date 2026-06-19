@@ -7,7 +7,8 @@
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E">
     <!--
-        Jendela utilitas operator. Dibuka lewat: SimpleUjianBrowser.exe --make-hash
+        Jendela utilitas operator. Dibuka lewat argumen baris perintah "make-hash"
+        (mis. menjalankan SimpleUjianBrowser.exe dengan argumen tersebut).
         Tujuannya menghasilkan blok "adminPassword" untuk ditempel ke config.json
         di Firebase, tanpa pernah menyimpan password polos.
     -->

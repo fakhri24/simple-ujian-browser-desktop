@@ -4,7 +4,8 @@
     <!--
         App.xaml adalah "titik masuk" aplikasi WPF.
         StartupUri sengaja DIHAPUS: pemilihan jendela awal kini ditangani
-        di App.xaml.cs (OnStartup) agar bisa mendukung mode "--make-hash".
+        di App.xaml.cs (OnStartup) agar bisa mendukung mode pembuat-hash
+        (argumen baris perintah: make-hash).
     -->
     <Application.Resources>
         <!-- Tempat menaruh style/resource global. Kosong dulu di Phase 1. -->
