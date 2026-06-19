@@ -10,12 +10,13 @@ namespace SimpleUjianBrowser
     /// </summary>
     public partial class PasswordDialog : Window
     {
-        // Password admin yang benar (lihat AGENTS.md). Untuk produksi nyata,
-        // sebaiknya disimpan ter-hash, bukan plain-text. Cukup untuk tahap ini.
-        private const string AdminPassword = "Admin123!";
+        // Fungsi verifikasi password yang disuntikkan dari MainWindow. Biasanya
+        // mencocokkan dengan hash (PBKDF2) dari config Firebase; bisa juga password bawaan.
+        private readonly Func<string, bool> _verify;
 
-        public PasswordDialog()
+        public PasswordDialog(Func<string, bool> verify)
         {
+            _verify = verify;
             InitializeComponent();
 
             // Fokuskan kotak password begitu dialog tampil agar admin langsung mengetik.
@@ -39,7 +40,7 @@ namespace SimpleUjianBrowser
         /// </summary>
         private void TryConfirm()
         {
-            if (PasswordInput.Password == AdminPassword)
+            if (_verify(PasswordInput.Password))
             {
                 DialogResult = true; // sukses -> menutup dialog & memberi sinyal "boleh keluar"
             }

@@ -1,11 +1,11 @@
 <Application x:Class="SimpleUjianBrowser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         App.xaml adalah "titik masuk" aplikasi WPF.
-        StartupUri="MainWindow.xaml" memberitahu WPF agar membuka
-        MainWindow secara otomatis saat aplikasi dijalankan.
+        StartupUri sengaja DIHAPUS: pemilihan jendela awal kini ditangani
+        di App.xaml.cs (OnStartup) agar bisa mendukung mode pembuat-hash
+        (argumen baris perintah: make-hash).
     -->
     <Application.Resources>
         <!-- Tempat menaruh style/resource global. Kosong dulu di Phase 1. -->

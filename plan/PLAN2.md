@@ -1,21 +1,52 @@
 # Development Plan 2 (OPSIONAL): Pengerasan Keamanan Lanjutan
 
-> ⚠️ **STATUS: USULAN — BELUM DISETUJUI UNTUK DIKERJAKAN.**
+> ⚠️ **STATUS: SEBAGIAN BESAR MASIH USULAN.**
 > Dokumen ini berisi langkah-langkah pengerasan tambahan **di luar** PLAN.md
-> (Fase 1-5 yang sudah selesai). Setiap langkah bersifat **independen** dan
-> akan **diaudit lebih dulu** sebelum diputuskan dikerjakan atau tidak.
+> (Fase 1-5 yang sudah selesai). Kecuali **Opt-2** (sudah dipilih untuk dikerjakan),
+> tiap langkah bersifat **independen** dan **diaudit lebih dulu** sebelum diputuskan.
 > Mengerjakan salah satu TIDAK mewajibkan mengerjakan yang lain.
+
+---
+
+## 🎯 Realita & Model Ancaman (BYOD)
+
+Penting dipahami sebelum membaca langkah-langkah di bawah, karena ini mengubah
+apa yang **mungkin** dicapai:
+
+- **Perangkat milik siswa (BYOD).** Siswa adalah **administrator mesinnya sendiri**.
+  Tidak ada aplikasi *user-mode* (termasuk aplikasi ini) yang bisa benar-benar
+  mengunci mesin yang **pemiliknya adalah lawannya**.
+- **`Ctrl+Alt+Del` tidak bisa diblokir.** Ini *Secure Attention Sequence* yang
+  ditangani Windows di level **di bawah** semua aplikasi (sengaja, demi keamanan).
+  Low-level keyboard hook kita TIDAK akan pernah bisa mencegatnya. Dari layar itu
+  siswa bisa membuka **Task Manager**, **Sign out**, **Switch user**, **Lock**.
+- **`Topmost` BUKAN batas keamanan.** Ia hanya menaruh jendela di atas jendela
+  *non-topmost*. Saat `Ctrl+Alt+Del` ditekan, layar pindah ke **secure desktop**
+  yang berbeda — jendela kita bahkan tidak ada di sana. Begitu proses kita
+  di-**End Task**, jendela Topmost-nya ikut lenyap; tidak ada yang "menutupi" apa pun.
+  Trik `Deactivated -> Activate()` pun *best-effort* (dibatasi aturan foreground-lock),
+  bukan jaminan.
+- **Rahasia di klien bisa diekstrak.** `.exe` .NET sangat mudah di-*decompile*
+  (dnSpy/ILSpy). Password yang di-*hardcode*, garam, kunci, semuanya terlihat.
+  Self-contained single-file kita TIDAK ter-obfuscate.
+
+**Konsekuensi strategis:** di BYOD, jangan bertaruh pada *"mencegah keluar"*
+(mustahil dijamin). Bertaruhlah pada **deterrence** (menghalau 95% siswa yang
+tidak akan repot membobol) **+ deteksi/pembuktian sisi server** (menangkap jejak
+yang sisanya). Penegakan kuat hanya mungkin pada **mesin terkelola** (lihat Opt-1),
+bukan BYOD.
 
 ---
 
 ## 📋 Ringkasan Roadmap Opsional
 
-| Langkah   | Judul                          | Tujuan Inti                                              | Tingkat Risiko/Effort | Lokasi Implementasi        |
-| :-------- | :----------------------------- | :------------------------------------------------------ | :-------------------- | :------------------------- |
-| **Opt-1** | Pengerasan OS (Ctrl+Alt+Del)   | Batasi Sign out / Task Manager / Switch User.           | Tinggi (ubah OS)      | Group Policy / Registry    |
-| **Opt-2** | Password Admin via Config      | Ganti password tanpa build ulang, disimpan ter-hash.    | Sedang                | `config.txt` + kode C#     |
-| **Opt-3** | Logging & Audit                | Catat upaya keluar & password salah untuk pengawas.     | Rendah                | Kode C# (file log)         |
-| **Opt-4** | Deteksi Multi-Monitor & Fokus  | Cegah layar kedua / hilang fokus saat ujian.            | Sedang-Tinggi         | Kode C# + WMI/Win32        |
+| Langkah   | Judul                              | Tujuan Inti                                              | Berlaku di BYOD?                | Status            |
+| :-------- | :--------------------------------- | :------------------------------------------------------ | :------------------------------ | :---------------- |
+| **Opt-1** | Pengerasan OS (Ctrl+Alt+Del)       | Batasi Sign out / Task Manager / Switch User.           | ❌ hanya mesin terkelola         | Usulan            |
+| **Opt-2** | Config & Password via Firebase     | Ganti URL & password terpusat tanpa sebar ulang `.exe`. | ⚠️ deterrence (tetap berguna)   | **DIPILIH**       |
+| **Opt-3** | Logging & Audit                    | Catat upaya keluar & password salah untuk pengawas.     | ⚠️ lemah jika lokal             | Usulan            |
+| **Opt-4** | Deteksi Multi-Monitor & Fokus      | Cegah layar kedua / hilang fokus saat ujian.            | ⚠️ deterrence                   | Usulan            |
+| **Opt-5** | Deteksi Sisi Server (heartbeat)    | Tandai sesi janggal; validasi submit dengan token.      | ✅ paling efektif di BYOD        | Usulan (disarankan) |
 
 ---
 
@@ -23,117 +54,125 @@
 
 ### 🟧 Opt-1: Pengerasan OS — Membatasi Ctrl+Alt+Del
 
-- **Masalah:** `Ctrl+Alt+Del` adalah Secure Attention Sequence level OS yang TIDAK
-  bisa diblok dari dalam aplikasi. Dari sana siswa masih bisa **Sign out**,
-  **Switch User**, **Lock**, atau membuka **Task Manager**.
-- **Tujuan:** Menonaktifkan opsi-opsi tersebut lewat kebijakan Windows, bukan kode aplikasi.
-- **Pendekatan (pilih salah satu):**
-  - **A. Group Policy Editor (`gpedit.msc`)** — hanya tersedia di Windows Pro/Edu/Enterprise.
-    - `User Configuration > Administrative Templates > System > Ctrl+Alt+Del Options`:
-      - "Remove Task Manager" -> Enabled
-      - "Remove Lock Computer" -> Enabled
-      - "Remove Change Password" -> Enabled
-      - "Remove Logoff" -> Enabled
-  - **B. Registry** (untuk Windows Home yang tak punya gpedit) — di bawah
+- **Realita:** Seperti dijelaskan di atas, `Ctrl+Alt+Del` TIDAK bisa diblok dari
+  aplikasi. Satu-satunya cara membatasi Task Manager / Sign out / Switch user /
+  Lock adalah lewat kebijakan **level OS** — dan itu **hanya berlaku di mesin
+  terkelola** (milik sekolah), **bukan BYOD**.
+- **Pendekatan (hanya untuk mesin terkelola):**
+  - **A. Group Policy (`gpedit.msc`)** — Windows Pro/Edu/Enterprise:
+    `User Configuration > Administrative Templates > System > Ctrl+Alt+Del Options`
+    → Remove Task Manager / Lock Computer / Change Password / Logoff = Enabled.
+  - **B. Registry** (Windows Home) di
     `HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\System`:
-    - `DisableTaskMgr = 1`
-    - `DisableLockWorkstation = 1`
-    - `DisableChangePassword = 1`
-    - `NoLogoff = 1`
-- **Langkah kerja:**
-  1. Buat skrip `.reg` atau `.bat` terpisah (bukan bagian dari .exe utama).
-  2. Jalankan sebagai Administrator **sebelum** ujian dimulai.
-  3. Siapkan skrip kebalikan (restore) untuk **mengembalikan** setting setelah ujian.
-- **Risiko & Catatan:**
-  - Mengubah OS lebih invasif; **wajib** ada skrip restore agar laptop normal kembali.
-  - Perlu hak Administrator di tiap laptop.
-  - Uji di 1 laptop dulu sebelum massal.
-- **Kriteria audit:** Apakah institusi mengizinkan ubah Group Policy/Registry pada
-  laptop? Apakah laptop milik sekolah (seragam) atau milik siswa (beragam)?
+    `DisableTaskMgr=1`, `DisableLockWorkstation=1`, `DisableChangePassword=1`, `NoLogoff=1`.
+  - **C. (Paling kuat) Assigned Access / Kiosk Mode / MDM** — Windows menjalankan
+    aplikasi dalam mode kiosk sungguhan. Butuh provisioning perangkat.
+- **Langkah kerja:** skrip `.reg`/`.bat` terpisah (bukan bagian `.exe`), dijalankan
+  sebagai Administrator **sebelum** ujian, plus **skrip restore** untuk mengembalikan.
+- **Kesimpulan untuk proyek ini:** Karena target kita **BYOD**, Opt-1 **tidak dapat
+  ditegakkan** dan **bukan prioritas**. Dicatat di sini hanya untuk skenario lab/
+  mesin sekolah di masa depan.
 
 ---
 
-### 🟧 Opt-2: Password Admin via `config.txt` (Ter-hash)
+### 🟧 Opt-2: Konfigurasi & Password via Firebase Hosting — **DIPILIH**
 
-- **Masalah:** Saat ini password `Admin123!` di-*hardcode* di `PasswordDialog.xaml.cs`.
-  Mengganti password berarti harus build ulang `.exe`.
-- **Tujuan:** Operator bisa mengganti password admin tanpa build ulang, dan password
-  TIDAK tersimpan sebagai teks polos.
-- **Pendekatan:**
-  1. Tambah baris konfigurasi di `config.txt`, mis. berformat `admin_hash=<SHA256 hex>`.
-  2. Saat verifikasi, aplikasi meng-hash input pengguna (SHA-256) lalu membandingkan
-     dengan hash dari config — bukan membandingkan teks polos.
-  3. Sediakan utilitas kecil (atau perintah PowerShell) untuk menghasilkan hash dari
-     password baru, lalu operator menempelkannya ke `config.txt`.
-- **Langkah kerja:**
-  - Perluas `ReadExamUrl()` menjadi parser config yang membaca beberapa kunci (URL + hash).
-  - Ganti perbandingan `== AdminPassword` di `PasswordDialog` dengan perbandingan hash.
-  - Fallback: jika `admin_hash` tidak ada di config, pakai hash default bawaan.
-- **Risiko & Catatan:**
-  - SHA-256 polos masih rentan brute-force untuk password lemah; pertimbangkan salt
-    atau algoritma lebih kuat (PBKDF2) bila perlu.
-  - Jangan menaruh password polos di repo/commit.
-- **Kriteria audit:** Seberapa sering password perlu diganti? Apakah perlu per-sekolah
-  berbeda? Apakah model ancamannya mencakup siswa yang membaca `config.txt`?
+- **Masalah yang dipecahkan:** (1) Password `Admin123!` saat ini di-*hardcode* →
+  ganti = build & sebar ulang `.exe` besar; (2) URL ujian/exit di `config.txt`
+  lokal → per-device, tidak terpusat.
+- **Keputusan:** Pindahkan **tiga pengaturan** — URL awal, URL exit, password admin —
+  ke sebuah `config.json` yang **di-host di Firebase Hosting** (infrastruktur yang
+  SUDAH dipakai: `simple-ujian.web.app`). Aplikasi mengambilnya saat start.
+  Ganti pengaturan = edit 1 file di Firebase → **semua laptop ikut berubah**, tanpa
+  sebar file apa pun.
+- **Penting (kejujuran keamanan):** Ini menyelesaikan **distribusi & kontrol terpusat**,
+  BUKAN ketahanan terhadap pemilik mesin. Verifikasi password tetap di sisi klien,
+  jadi tetap bisa di-*patch* lewat decompile. Levelnya **deterrence** — tetap sangat
+  berguna untuk siswa kasual.
+- **Bentuk data (usulan `config.json`):**
+  ```json
+  {
+    "version": 1,
+    "examUrl": "https://simple-ujian.web.app/",
+    "exitUrl": "https://simple-ujian.web.app/selesai",
+    "adminPassword": {
+      "algo": "PBKDF2-SHA256",
+      "iterations": 100000,
+      "salt": "<base64>",
+      "hash": "<base64>"
+    }
+  }
+  ```
+- **Verifikasi password:** Gunakan **hash satu-arah bergaram (PBKDF2)**, BUKAN enkripsi.
+  Saat siswa/operator mengetik password, aplikasi meng-hash input dengan salt+iterasi
+  yang sama lalu membandingkan dengan `hash`. Aplikasi TIDAK pernah menyimpan/membaca
+  password polos.
+- **Catatan:** `config.json` di Hosting bersifat **publik** (siapa pun yang tahu URL
+  bisa membacanya). Karena itu password admin **wajib kuat** (hash publik bisa
+  di-*brute-force* offline untuk password lemah). PBKDF2 iterasi tinggi memperlambat
+  serangan, tapi tidak menggantikan password yang kuat.
+- **Alur saat aplikasi start:**
+  1. `HttpClient` fetch `config.json` (timeout pendek, mis. 5 detik).
+  2. **Sukses** → pakai config itu, lalu simpan salinan sebagai *last-known-good* lokal.
+  3. **Gagal/offline** → pakai *last-known-good* lokal; jika belum ada, pakai default
+     bawaan (compiled-in) agar ujian tetap bisa jalan.
+- **Membuat hash:** sediakan utilitas kecil (mode tersembunyi `--make-hash` di aplikasi,
+  atau skrip PowerShell/Node) untuk menghasilkan `salt`+`hash` dari password baru, lalu
+  operator menempelkannya ke `config.json` di Firebase.
+- **Menu config dalam aplikasi (opsional):** karena sumber kebenaran kini di Firebase,
+  menu cukup berupa **panel status (read-only)** ber-password yang menampilkan config
+  efektif + tombol "muat ulang config". Pengeditan tetap dilakukan di Firebase.
 
 ---
 
 ### 🟧 Opt-3: Logging & Audit
 
-- **Tujuan:** Memberi pengawas jejak aktivitas penting untuk deteksi kecurangan/insiden.
-- **Yang dicatat (usulan):**
-  - Waktu aplikasi mulai & URL ujian yang dimuat.
-  - Setiap pemicu `Ctrl+Shift+Q` (permintaan keluar).
-  - Setiap percobaan password admin **salah** (beserta timestamp).
-  - Keluar berhasil (password benar) + timestamp.
-  - Opsional: kehilangan fokus / percobaan tombol terblokir (bisa "berisik").
-- **Pendekatan:**
-  1. Buat kelas `Logger` sederhana yang menulis ke file teks
-     (mis. `logs\exam-YYYYMMDD.log`) di samping `.exe`.
-  2. Tulis dengan format: `[timestamp] [level] pesan`.
-  3. Pastikan penulisan aman-thread dan tidak menghambat UI (append ringan).
-- **Langkah kerja:**
-  - Sisipkan pemanggilan log di titik kunci: start, navigate, request exit,
-    wrong password, exit success.
-  - Pertimbangkan rotasi/penghapusan log lama agar tidak menumpuk.
-- **Risiko & Catatan:**
-  - **Privasi:** jangan pernah mencatat isi jawaban atau data pribadi siswa.
-  - Log lokal bisa dihapus siswa jika punya akses file; untuk audit kuat, kirim ke server.
-- **Kriteria audit:** Cukup log lokal, atau perlu terkirim ke server pusat? Berapa lama
-  log disimpan? Siapa yang berhak membacanya?
+- **Tujuan:** Memberi pengawas jejak aktivitas penting.
+- **Yang dicatat (usulan):** waktu mulai & URL dimuat; tiap pemicu keluar
+  (`Ctrl+Shift+Q`/tombol Keluar); tiap percobaan password **salah**; keluar berhasil;
+  pemicu `exitUrl`.
+- **Realita BYOD:** Log **lokal bisa dihapus** siswa. Agar berguna untuk audit,
+  log sebaiknya **dikirim ke server** (lihat Opt-5). Log lokal hanya cocok untuk
+  diagnosa, bukan bukti.
+- **Privasi:** jangan pernah mencatat isi jawaban atau data pribadi siswa.
 
 ---
 
 ### 🟧 Opt-4: Deteksi Multi-Monitor & Kehilangan Fokus
 
-- **Tujuan:** Mencegah modus kecurangan memakai layar kedua atau memindahkan fokus
-  ke aplikasi lain.
+- **Tujuan:** Mengurangi modus layar kedua / fokus pindah.
+- **Sub-fitur:** deteksi >1 layar (`EnumDisplayMonitors`); pemantauan fokus
+  (kita sudah merebut fokus via `Deactivated -> Activate()`, langkah ini menambah
+  **pencatatan/peringatan**).
+- **Realita BYOD:** tetap level **deterrence** & rawan *false-positive* (mis. laptop
+  + proyektor sah). Butuh kebijakan jelas. Bukan prioritas.
+
+---
+
+### 🟧 Opt-5: Deteksi Sisi Server (heartbeat + token submit) — DISARANKAN untuk BYOD
+
+- **Mengapa:** Inilah satu-satunya lapisan yang **benar-benar efektif di BYOD**,
+  karena keputusan terjadi di server (di luar kendali siswa).
 - **Sub-fitur (usulan):**
-  - **a. Deteksi monitor ganda:** Jika terdeteksi >1 layar aktif, tampilkan peringatan
-    atau blokir mulai ujian sampai layar kedua dicabut.
-    - Implementasi: `System.Windows.Forms.Screen.AllScreens` atau Win32
-      `EnumDisplayMonitors`.
-  - **b. Pemantauan fokus:** Jika jendela ujian kehilangan fokus secara tak wajar,
-    catat ke log (Opt-3) atau tampilkan peringatan.
-    - Catatan: kode kita SUDAH merebut fokus via `Deactivated -> Activate()`;
-      langkah ini menambah pencatatan/peringatan, bukan sekadar merebut.
-  - **c. (Lanjutan, hati-hati) Deteksi screen-sharing / rekam layar:** sangat sulit &
-    rawan false-positive; umumnya butuh pendekatan level kernel. **Tidak disarankan**
-    tanpa kebutuhan kuat.
-- **Risiko & Catatan:**
-  - Multi-monitor sah dipakai sebagian siswa (mis. laptop + proyektor) -> butuh kebijakan jelas.
-  - Fitur ini bisa menimbulkan false-positive dan keluhan; uji menyeluruh.
-- **Kriteria audit:** Apakah laptop siswa memang berpotensi multi-monitor? Seberapa
-  agresif respons yang diinginkan (peringatan vs blokir total)?
+  - **a. Token sesi:** submit jawaban hanya sah bila menyertakan token dari server;
+    sesi tanpa token / ganda / kedaluwarsa ditandai.
+  - **b. Heartbeat:** aplikasi mengirim sinyal tiap X detik. Bila berhenti mendadak
+    (mis. di-End Task), server menandai sesi **mencurigakan** untuk ditinjau pengawas.
+  - **c. Anomali:** durasi janggal, sesi dibuka di dua tempat, dll.
+- **Catatan:** ini sebagian besar pekerjaan di **sisi web ujian (Firebase)**, bukan
+  di aplikasi desktop. Aplikasi desktop cukup mengirim heartbeat. Pergeseran pola pikir:
+  **dari "mencegah keluar" → "mendeteksi & membuktikan".**
 
 ---
 
 ## 🤖 Catatan untuk AI Agent
 
-1. **Jangan mengerjakan langkah mana pun dari dokumen ini sampai diminta eksplisit.**
-2. Saat diaudit, bahas **satu langkah pada satu waktu**; konfirmasi keputusan
-   (kerjakan / tunda / batalkan) sebelum menulis kode.
-3. Untuk langkah yang mengubah OS (Opt-1), selalu siapkan **skrip restore** dan
-   tegaskan kebutuhan hak Administrator.
-4. Jaga konsistensi gaya: penjelasan beginner-friendly, perintah berbasis CLI,
-   dan tidak merusak fungsi Fase 1-5 yang sudah berjalan.
+1. **Opt-2 sudah dipilih** untuk dikerjakan; langkah lain tetap usulan — jangan kerjakan
+   tanpa diminta eksplisit.
+2. Saat diaudit, bahas **satu langkah pada satu waktu**; konfirmasi keputusan sebelum
+   menulis kode.
+3. Untuk langkah yang mengubah OS (Opt-1), selalu siapkan **skrip restore** + tegaskan
+   kebutuhan hak Administrator — namun ingat Opt-1 **tidak berlaku di BYOD**.
+4. Jaga konsistensi gaya: penjelasan beginner-friendly, perintah berbasis CLI, dan
+   tidak merusak fungsi Fase 1-5 yang sudah berjalan.
+5. Untuk password, gunakan **hash bergaram (PBKDF2)**, BUKAN enkripsi/cipher.

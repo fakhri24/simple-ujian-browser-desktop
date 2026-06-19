@@ -1,10 +1,16 @@
 # ====================================================================
 # KONFIGURASI SIMPLE UJIAN BROWSER
 # --------------------------------------------------------------------
-# Baris yang diawali tanda '#' adalah komentar (diabaikan aplikasi).
-# Baris pertama yang BUKAN komentar dan tidak kosong akan dipakai
-# sebagai URL ujian. Ganti URL di bawah lalu simpan -- TIDAK perlu
-# build ulang aplikasi. Cukup edit file ini di samping .exe.
+# Sejak versi ini, pengaturan utama (URL ujian, URL exit, password admin)
+# diambil dari config.json di SERVER (Firebase Hosting), sehingga bisa
+# diubah terpusat tanpa membagikan ulang aplikasi ke setiap laptop.
+#
+# File config.txt ini OPSIONAL dan HANYA dipakai untuk MENGGANTI ALAMAT
+# config.json (mis. saat uji coba / staging). Baris pertama yang bukan
+# komentar (#) dan tidak kosong dipakai sebagai URL config.json.
+# Jika dibiarkan kosong/dikomentari, aplikasi memakai alamat bawaan:
+#   https://simple-ujian.web.app/lockdown-config.json
+#
+# Contoh override:
+#   https://staging.contoh.com/lockdown-config.json
 # ====================================================================
-
-https://simple-ujian.web.app/

@@ -14,28 +14,133 @@
         kontrol <wv2:WebView2> dari package Microsoft.Web.WebView2.
     -->
 
+    <Window.Resources>
+        <!--
+            Gaya bersama untuk tombol toolbar (Muat ulang & Keluar).
+            Warna latar diisi per-tombol lewat properti Background; hover/pressed
+            cukup menurunkan opacity sehingga satu template dipakai ulang.
+        -->
+        <Style x:Key="ToolbarButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#1E1E2E" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.70" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Gaya bersama untuk teks info (baterai & jam) di toolbar. -->
+        <Style x:Key="StatusInfo" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CDD6F4" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,16,0" />
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <!--
-            WebView2 = area browser tempat halaman ujian dirender.
-            - x:Name="WebView" supaya bisa diakses dari code-behind.
-            - Visibility="Collapsed": disembunyikan dulu sampai halaman siap,
-              supaya siswa tidak melihat area putih kosong saat loading.
+            Dua baris: bilah toolbar di atas, area browser di bawah.
+            PENTING: toolbar TIDAK boleh menumpuk WebView. Kontrol WebView2 adalah
+            jendela native (HWND) yang (karena keterbatasan "airspace" WPF)
+            selalu digambar DI ATAS konten WPF yang berbagi area dengannya. Jadi
+            toolbar ditaruh di barisnya sendiri agar tidak tertutup saat halaman tampil.
         -->
-        <wv2:WebView2 x:Name="WebView" Visibility="Collapsed" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <!--
-            Overlay status di tengah layar. Dipakai untuk menampilkan
-            pesan loading ATAU pesan error (mis. WebView2 Runtime belum
-            terpasang). Akan disembunyikan begitu halaman berhasil dimuat.
-        -->
-        <TextBlock x:Name="StatusText"
-                   Text="Menyiapkan ujian..."
-                   Foreground="#CDD6F4"
-                   FontSize="24"
-                   TextWrapping="Wrap"
-                   TextAlignment="Center"
-                   MaxWidth="700"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center" />
+        <!-- Bilah atas (baris 0): info baterai, jam, tombol Muat ulang & Keluar. -->
+        <Border Grid.Row="0"
+                Background="#1E1E2E"
+                Padding="12,8">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- Kondisi baterai (diisi dari code-behind via timer). -->
+                <TextBlock x:Name="BatteryText"
+                           Style="{StaticResource StatusInfo}"
+                           Text="--" />
+
+                <!-- Jam berjalan (diisi dari code-behind via timer). -->
+                <TextBlock x:Name="ClockText"
+                           Style="{StaticResource StatusInfo}"
+                           Text="--:--:--" />
+
+                <!-- Muat ulang halaman ujian (memanggil CoreWebView2.Reload). -->
+                <Button x:Name="ReloadButton"
+                        Content="Muat ulang"
+                        Click="ReloadButton_Click"
+                        Style="{StaticResource ToolbarButton}"
+                        Background="#89B4FA"
+                        Margin="0,0,10,0"
+                        ToolTip="Muat ulang halaman ujian" />
+
+                <!--
+                    Tombol Keluar: memanggil RequestAdminExit() yang SAMA dengan
+                    jalur Ctrl+Shift+Q, jadi tetap wajib memasukkan password admin.
+                -->
+                <Button x:Name="ExitButton"
+                        Content="Keluar"
+                        Click="ExitButton_Click"
+                        Style="{StaticResource ToolbarButton}"
+                        Background="#F38BA8"
+                        ToolTip="Keluar dari ujian (perlu password pengawas)" />
+            </StackPanel>
+        </Border>
+
+        <!-- Area browser (baris 1): WebView + overlay status. -->
+        <Grid Grid.Row="1">
+            <!--
+                WebView2 = area browser tempat halaman ujian dirender.
+                Visibility="Collapsed" sampai halaman siap, supaya siswa tidak
+                melihat area putih kosong saat loading.
+            -->
+            <wv2:WebView2 x:Name="WebView" Visibility="Collapsed" />
+
+            <!--
+                Overlay status. Boleh menumpuk WebView karena HANYA tampil saat
+                WebView disembunyikan (loading/error/config gagal); tak pernah
+                tampil bersamaan dengan WebView, jadi tidak terkena masalah airspace.
+            -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="StatusText"
+                           Text="Menyiapkan ujian..."
+                           Foreground="#CDD6F4"
+                           FontSize="24"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           MaxWidth="700" />
+
+                <Button x:Name="RetryButton"
+                        Content="Coba lagi"
+                        Click="RetryButton_Click"
+                        Style="{StaticResource ToolbarButton}"
+                        Background="#89B4FA"
+                        HorizontalAlignment="Center"
+                        Margin="0,20,0,0"
+                        Visibility="Collapsed" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

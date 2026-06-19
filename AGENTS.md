@@ -44,13 +44,13 @@ The application will act as a secure "wrapper" around a web-based examination pl
   - `Windows Key` / `LWin` / `RWin` (Start Menu)
   - `Alt + F4` (Force Close)
   - `Ctrl + Esc` (Start Menu)
-- _Note on Task Manager:_ Acknowledge that `Ctrl+Shift+Esc` and `Ctrl+Alt+Del` cannot be blocked easily at the user level, but ensure the application's `Topmost="True"` behavior forces Task Manager to open _behind_ our exam window.
+- _Note on Task Manager / Ctrl+Alt+Del:_ These **cannot** be blocked from a user-mode app. `Ctrl+Alt+Del` is a Secure Attention Sequence handled below all applications and switches to a separate secure desktop. `Topmost="True"` is **NOT** a security boundary — it only orders above non-topmost windows, and once our process is ended (via Task Manager reached through Ctrl+Alt+Del) the window is gone. On BYOD this lockdown is **deterrence, not a guarantee**. See [plan/PLAN2.md](plan/PLAN2.md).
 
 ### D. Admin Exit Mechanism
 
 - Intercept the window closing event.
 - If a user attempts to close the app, prompt them with a custom native dialog asking for an **Admin Password**.
-- Default admin password: `Admin123!`.
+- The password is verified against a **PBKDF2 hash** taken from `config.json` (Firebase Hosting); see `PasswordHasher.cs` / `ConfigService.cs`. Fallback when config has no `adminPassword`: `Admin123!`.
 - The application can only exit if the correct password is provided.
 
 ## 4. Coding & Architecture Guidelines
